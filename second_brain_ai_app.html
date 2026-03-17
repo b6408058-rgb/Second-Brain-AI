@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FDFCF9;
+    --surface2: #F0EDE6;
+    --border: rgba(0,0,0,0.07);
+    --border-md: rgba(0,0,0,0.12);
+    --text: #1A1916;
+    --text2: #6B6760;
+    --text3: #A8A49E;
+    --accent: #1A1916;
+    --tag-task: #E8EFF8;
+    --tag-task-t: #2A4A7F;
+    --tag-idea: #F3EDF8;
+    --tag-idea-t: #5B2D8A;
+    --tag-note: #EBF5EC;
+    --tag-note-t: #1E5C2A;
+    --tag-link: #FEF3E8;
+    --tag-link-t: #7A3C10;
+    --tag-reminder: #FEF0F0;
+    --tag-reminder-t: #7A1F1F;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --r: 14px;
+    --r-sm: 8px;
+    --nav-h: 72px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen {
+    display: none;
+    flex: 1;
+    padding-bottom: calc(var(--nav-h) + 16px);
+    animation: fadeIn 0.2s ease;
+  }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .top-bar {
+    padding: 52px 24px 8px;
+  }
+
+  .top-bar .date {
+    font-size: 13px;
+    color: var(--text3);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .top-bar h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .top-bar p {
+    font-size: 15px;
+    color: var(--text2);
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 24px 24px 10px;
+  }
+
+  .home-menu {
+    padding: 0 16px;
+  }
+
+  .home-tile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    background: var(--surface);
+    border-radius: var(--r);
+    border: 0.5px solid var(--border);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .home-tile:active { transform: scale(0.98); background: var(--surface2); }
+
+  .home-tile-left { display: flex; align-items: center; gap: 14px; }
+
+  .home-tile-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .home-tile-text h3 { font-size: 16px; font-weight: 500; color: var(--text); }
+  .home-tile-text p { font-size: 13px; color: var(--text2); font-weight: 300; margin-top: 2px; }
+
+  .home-tile-arrow { color: var(--text3); font-size: 18px; }
+
+  .home-capture-btn {
+    margin: 16px 16px 4px;
+    padding: 20px 24px;
+    background: var(--text);
+    color: #fff;
+    border-radius: var(--r);
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .home-capture-btn:active { opacity: 0.9; transform: scale(0.98); }
+  .home-capture-btn span { font-size: 16px; font-weight: 400; }
+  .home-capture-btn .plus { font-size: 24px; font-weight: 300; opacity: 0.7; }
+
+  .capture-area {
+    padding: 16px 16px 0;
+  }
+
+  .capture-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 20px;
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+    caret-color: var(--text);
+  }
+
+  .capture-textarea::placeholder { color: var(--text3); }
+  .capture-textarea:focus { border-color: var(--border-md); }
+
+  .capture-meta {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .type-chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    transition: all 0.12s;
+  }
+  .type-chip.sel { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .capture-submit {
+    margin: 4px 16px 0;
+    padding: 16px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--r);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    width: calc(100% - 32px);
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.15s;
+  }
+  .capture-submit:active { opacity: 0.85; }
+
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text3);
+    padding: 4px 10px;
+    background: var(--surface2);
+    border-radius: 20px;
+    margin: 8px 16px;
+  }
+  .ai-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #3B82F6;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  .items-list { padding: 0 16px; }
+
+  .item-row {
+    padding: 16px 0;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-row:active { opacity: 0.7; }
+
+  .item-row-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; margin-bottom: 8px;
+  }
+
+  .item-text {
+    font-size: 15px; font-weight: 400; color: var(--text);
+    line-height: 1.5; flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .item-time { font-size: 12px; color: var(--text3); flex-shrink: 0; margin-top: 2px; }
+
+  .item-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .chip {
+    font-size: 11px; font-weight: 500;
+    padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+  .chip-task { background: var(--tag-task); color: var(--tag-task-t); }
+  .chip-idea { background: var(--tag-idea); color: var(--tag-idea-t); }
+  .chip-note { background: var(--tag-note); color: var(--tag-note-t); }
+  .chip-link { background: var(--tag-link); color: var(--tag-link-t); }
+  .chip-reminder { background: var(--tag-reminder); color: var(--tag-reminder-t); }
+  .chip-cat {
+    font-size: 11px; font-weight: 400; padding: 3px 9px; border-radius: 20px;
+    background: var(--surface2); color: var(--text2);
+  }
+
+  .timeline-group { margin-bottom: 8px; }
+  .tl-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--text3); padding: 20px 16px 4px;
+  }
+
+  .search-wrap { padding: 16px; }
+  .search-input {
+    width: 100%; padding: 14px 18px;
+    font-family: var(--sans); font-size: 16px;
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--r); color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus { border-color: var(--border-md); }
+
+  .review-section { padding: 0 16px 8px; }
+
+  .review-block {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 18px 20px;
+    margin-bottom: 10px;
+  }
+
+  .review-block h3 {
+    font-family: var(--serif);
+    font-size: 20px; font-weight: 400;
+    margin-bottom: 14px; color: var(--text);
+  }
+
+  .review-item {
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 14px; color: var(--text2); line-height: 1.5;
+  }
+  .review-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .review-stat-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 16px;
+  }
+  .review-stat {
+    background: var(--surface2); border-radius: var(--r-sm);
+    padding: 14px 12px; text-align: center;
+  }
+  .review-stat .num { font-family: var(--serif); font-size: 28px; color: var(--text); }
+  .review-stat .lbl { font-size: 11px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 420px;
+    height: var(--nav-h);
+    background: rgba(247,245,240,0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 0.5px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 8px 8px;
+    z-index: 100;
+  }
+
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 12px; cursor: pointer; border-radius: 10px;
+    transition: background 0.12s; background: none; border: none;
+    font-family: var(--sans);
+  }
+  .nav-btn:active { background: var(--surface2); }
+  .nav-btn .icon { font-size: 22px; line-height: 1; }
+  .nav-btn .label { font-size: 10px; color: var(--text3); font-weight: 400; letter-spacing: 0.04em; }
+  .nav-btn.active .label { color: var(--text); font-weight: 500; }
+  .nav-btn.active .icon { transform: scale(1.05); }
+
+  .detail-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(26,25,22,0.5);
+    z-index: 200;
+    animation: fadeIn 0.18s ease;
+  }
+  .detail-overlay.open { display: flex; align-items: flex-end; }
+
+  .detail-sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 420px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+    animation: slideUp 0.22s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .detail-handle {
+    width: 36px; height: 4px; background: var(--border-md);
+    border-radius: 2px; margin: 0 auto 20px;
+  }
+
+  .detail-sheet h2 {
+    font-family: var(--serif);
+    font-size: 22px; font-weight: 400; line-height: 1.4;
+    color: var(--text); margin-bottom: 16px;
+  }
+
+  .detail-meta {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+
+  .detail-body {
+    font-size: 15px; color: var(--text2); line-height: 1.7;
+    font-weight: 300; white-space: pre-wrap;
+  }
+
+  .detail-time-str {
+    font-size: 12px; color: var(--text3); margin-top: 20px;
+  }
+
+  .close-btn {
+    position: absolute; top: 20px; right: 20px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--surface2); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text2);
+  }
+
+  .empty-state {
+    text-align: center; padding: 60px 32px 40px;
+    color: var(--text3);
+  }
+  .empty-state .es-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; font-weight: 300; line-height: 1.6; }
+
+  .toast {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff;
+    padding: 10px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 400;
+    z-index: 999; opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  .tl-filter-row {
+    display: flex; gap: 8px; padding: 0 16px 8px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tl-filter-row::-webkit-scrollbar { display: none; }
+
+  .tl-filter {
+    padding: 7px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 400; cursor: pointer;
+    background: var(--surface); border: 0.5px solid var(--border);
+    color: var(--text2); white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .tl-filter.sel { background: var(--text); color: #fff; border-color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="top-bar">
+      <div class="date" id="today-date"></div>
+      <h1>Second<br>Brain</h1>
+      <p>Everything, organized.</p>
+    </div>
+
+    <div style="padding: 0 16px 0; margin-top: 8px;">
+      <div class="home-capture-btn" onclick="goTo('capture')">
+        <span>Drop a thought</span>
+        <span class="plus">+</span>
+      </div>
+    </div>
+
+    <div class="section-label">Navigate</div>
+    <div class="home-menu">
+      <div class="home-tile" onclick="goTo('today')">
+        <div class="home-tile-left">
+          <div class="home-tile-icon">☀️</div>
+          <div class="home-tile-text">
+            <h3>Today</h3>
+            <p id="home-today-count">Loading...</p>
+          </div>
+        </div>
+        <span class="home-tile-arrow">›</span>
+      </div>
+      <div class="home-tile" onclick="goTo('timeline')">
+        <div class="home-tile-left">
+          <div class="home-tile-icon">📅</div>
+          <div class="home-tile-text">
+            <h3>Timeline</h3>
+            <p>Browse by date</p>
+          </div>
+        </div>
+        <span class="home-tile-arrow">›</span>
+      </div>
+      <div class="home-tile" onclick="goTo('review')">
+        <div class="home-tile-left">
+          <div class="home-tile-icon">✦</div>
+          <div class="home-tile-text">
+            <h3>Weekly Review</h3>
+            <p>Reflect on the week</p>
+          </div>
+        </div>
+        <span class="home-tile-arrow">›</span>
+      </div>
+      <div class="home-tile" onclick="goTo('search')">
+        <div class="home-tile-left">
+          <div class="home-tile-icon">🔍</div>
+          <div class="home-tile-text">
+            <h3>Search</h3>
+            <p>Find anything</p>
+          </div>
+        </div>
+        <span class="home-tile-arrow">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPTURE -->
+  <div class="screen" id="s-capture">
+    <div class="top-bar">
+      <div class="date">Capture</div>
+      <h1>Drop anything.</h1>
+    </div>
+    <div class="capture-area">
+      <textarea class="capture-textarea" id="capture-input" placeholder="A thought, task, link, idea, reminder…" rows="7"></textarea>
+    </div>
+    <div class="capture-meta" id="type-chips">
+      <div class="type-chip sel" data-type="auto" onclick="selType(this)">Auto</div>
+      <div class="type-chip" data-type="task" onclick="selType(this)">Task</div>
+      <div class="type-chip" data-type="idea" onclick="selType(this)">Idea</div>
+      <div class="type-chip" data-type="note" onclick="selType(this)">Note</div>
+      <div class="type-chip" data-type="link" onclick="selType(this)">Link</div>
+      <div class="type-chip" data-type="reminder" onclick="selType(this)">Reminder</div>
+    </div>
+    <div class="ai-badge">
+      <div class="ai-dot"></div>
+      AI will classify & organize
+    </div>
+    <button class="capture-submit" onclick="submitCapture()">Save</button>
+  </div>
+
+  <!-- TODAY -->
+  <div class="screen" id="s-today">
+    <div class="top-bar">
+      <div class="date">Today</div>
+      <h1 id="today-heading">Today</h1>
+    </div>
+    <div class="items-list" id="today-list"></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="screen" id="s-timeline">
+    <div class="top-bar">
+      <div class="date">Timeline</div>
+      <h1>History</h1>
+    </div>
+    <div class="tl-filter-row" id="tl-filters">
+      <div class="tl-filter sel" data-range="all" onclick="selTlFilter(this)">All</div>
+      <div class="tl-filter" data-range="today" onclick="selTlFilter(this)">Today</div>
+      <div class="tl-filter" data-range="yesterday" onclick="selTlFilter(this)">Yesterday</div>
+      <div class="tl-filter" data-range="week" onclick="selTlFilter(this)">This Week</div>
+    </div>
+    <div id="timeline-content"></div>
+  </div>
+
+  <!-- WEEKLY REVIEW -->
+  <div class="screen" id="s-review">
+    <div class="top-bar">
+      <div class="date">Weekly Review</div>
+      <h1>This Week</h1>
+    </div>
+    <div class="review-section" id="review-content"></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="screen" id="s-search">
+    <div class="top-bar">
+      <div class="date">Search</div>
+      <h1>Find it.</h1>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" id="search-input" placeholder="Search thoughts, tasks, ideas…" oninput="doSearch(this.value)">
+    </div>
+    <div class="items-list" id="search-results"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" data-screen="home" onclick="goTo('home')">
+      <span class="icon">⌂</span>
+      <span class="label">Home</span>
+    </button>
+    <button class="nav-btn" data-screen="capture" onclick="goTo('capture')">
+      <span class="icon">⊕</span>
+      <span class="label">Capture</span>
+    </button>
+    <button class="nav-btn" data-screen="today" onclick="goTo('today')">
+      <span class="icon">☀</span>
+      <span class="label">Today</span>
+    </button>
+    <button class="nav-btn" data-screen="timeline" onclick="goTo('timeline')">
+      <span class="icon">◫</span>
+      <span class="label">Timeline</span>
+    </button>
+    <button class="nav-btn" data-screen="search" onclick="goTo('search')">
+      <span class="icon">○</span>
+      <span class="label">Search</span>
+    </button>
+  </nav>
+</div>
+
+<!-- DETAIL SHEET -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-sheet" id="detail-sheet">
+    <div class="detail-handle"></div>
+    <div class="detail-meta" id="detail-meta"></div>
+    <h2 id="detail-title"></h2>
+    <div class="detail-body" id="detail-body"></div>
+    <div class="detail-time-str" id="detail-time"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED = [
+  { id: 1, text: "Read Thinking Fast and Slow — chapter 3 on cognitive bias is key for the pitch deck", type: "task", cat: "learning", ts: Date.now() - 1000*60*25 },
+  { id: 2, text: "What if we added a voice-first capture mode? Record → transcribe → store. Could be the killer feature.", type: "idea", cat: "business", ts: Date.now() - 1000*60*55 },
+  { id: 3, text: "https://maggieappleton.com/garden — digital garden concept, very relevant to this project", type: "link", cat: "learning", ts: Date.now() - 1000*60*90 },
+  { id: 4, text: "Call dentist before end of week to reschedule appointment", type: "reminder", cat: "personal", ts: Date.now() - 1000*60*60*3 },
+  { id: 5, text: "The best interfaces don't feel designed. They feel inevitable.", type: "note", cat: "work", ts: Date.now() - 1000*60*60*5 },
+  { id: 6, text: "Review Q2 OKRs with team — need to align on health metric definitions before board presentation", type: "task", cat: "work", ts: Date.now() - 1000*3600*24 - 1000*60*30 },
+  { id: 7, text: "Morning run streak: day 14. Legs feeling strong. Target 21 days.", type: "note", cat: "health", ts: Date.now() - 1000*3600*24 - 1000*3600*2 },
+  { id: 8, text: "Idea for side project: a minimal journaling app with AI-powered reflection prompts each evening", type: "idea", cat: "business", ts: Date.now() - 1000*3600*24*2 },
+  { id: 9, text: "Finish tax documents — accountant needs everything by Friday", type: "task", cat: "personal", ts: Date.now() - 1000*3600*24*2 - 1000*3600*3 },
+  { id: 10, text: "Write blog post on the 'minimal viable cognition' framework — clarity before complexity", type: "task", cat: "work", ts: Date.now() - 1000*3600*24*3 },
+  { id: 11, text: "Spaced repetition is underrated for learning new languages. Try Anki again.", type: "idea", cat: "learning", ts: Date.now() - 1000*3600*24*4 },
+  { id: 12, text: "Weekly groceries: olive oil, lentils, Greek yogurt, spinach, sourdough", type: "note", cat: "personal", ts: Date.now() - 1000*3600*24*5 },
+];
+
+let items = JSON.parse(localStorage.getItem('sb_items') || 'null') || SEED;
+let selTypeVal = 'auto';
+let currentScreen = 'home';
+let tlFilter = 'all';
+
+function save() { localStorage.setItem('sb_items', JSON.stringify(items)); }
+
+function classify(text) {
+  const t = text.toLowerCase();
+  if (/https?:\/\//.test(text)) return { type: 'link', cat: 'learning' };
+  if (/\b(remind|don't forget|remember to|call|appointment)\b/i.test(text)) return { type: 'reminder', cat: 'personal' };
+  if (/\b(todo|to-do|task|finish|complete|need to|must|submit|review|deadline|by friday|by monday)\b/i.test(text)) return { type: 'task', cat: 'work' };
+  if (/\b(what if|idea:|imagine|could|might|concept|startup|product|feature)\b/i.test(text)) return { type: 'idea', cat: 'business' };
+  if (/\b(health|workout|gym|run|sleep|eat|diet|calories|steps|doctor)\b/i.test(text)) return { type: t.includes('schedule') ? 'reminder' : 'note', cat: 'health' };
+  if (/\b(learn|read|book|course|article|study|concept|understand)\b/i.test(text)) return { type: 'note', cat: 'learning' };
+  return { type: 'note', cat: 'work' };
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diffMin = Math.floor((now - d) / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return diffMin + 'm ago';
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24 && d.toDateString() === now.toDateString()) return diffH + 'h ago';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtDateFull(ts) {
+  return new Date(ts).toLocaleString([], { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function chipHtml(type) {
+  return `<span class="chip chip-${type}">${type}</span>`;
+}
+function catHtml(cat) {
+  return `<span class="chip chip-cat">${cat}</span>`;
+}
+
+function renderItem(item, onclick) {
+  return `<div class="item-row" onclick="${onclick}">
+    <div class="item-row-top">
+      <span class="item-text">${escHtml(item.text)}</span>
+      <span class="item-time">${fmtTime(item.ts)}</span>
+    </div>
+    <div class="item-chips">${chipHtml(item.type)}${catHtml(item.cat)}</div>
+  </div>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + screen).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.screen === screen);
+  });
+  currentScreen = screen;
+  if (screen === 'today') renderToday();
+  if (screen === 'timeline') renderTimeline();
+  if (screen === 'review') renderReview();
+  if (screen === 'home') updateHomeCount();
+  if (screen === 'capture') document.getElementById('capture-input').focus();
+}
+
+function selType(el) {
+  document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  selTypeVal = el.dataset.type;
+}
+
+function submitCapture() {
+  const txt = document.getElementById('capture-input').value.trim();
+  if (!txt) return;
+  let type, cat;
+  if (selTypeVal === 'auto') {
+    const cl = classify(txt);
+    type = cl.type; cat = cl.cat;
+  } else {
+    type = selTypeVal;
+    cat = classify(txt).cat;
+  }
+  const item = { id: Date.now(), text: txt, type, cat, ts: Date.now() };
+  items.unshift(item);
+  save();
+  document.getElementById('capture-input').value = '';
+  selType(document.querySelector('.type-chip[data-type="auto"]'));
+  showToast('Saved & organized ✓');
+  setTimeout(() => goTo('today'), 600);
+}
+
+function updateHomeCount() {
+  const today = items.filter(i => isToday(i.ts));
+  const el = document.getElementById('home-today-count');
+  if (el) el.textContent = today.length === 0 ? 'Nothing yet today' : `${today.length} item${today.length > 1 ? 's' : ''} captured`;
+}
+
+function isToday(ts) {
+  const d = new Date(ts), n = new Date();
+  return d.toDateString() === n.toDateString();
+}
+
+function isYesterday(ts) {
+  const d = new Date(ts);
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  return d.toDateString() === y.toDateString();
+}
+
+function isThisWeek(ts) {
+  const now = Date.now();
+  return ts > now - 7 * 24 * 3600 * 1000;
+}
+
+function renderToday() {
+  const todayItems = items.filter(i => isToday(i.ts));
+  const el = document.getElementById('today-list');
+  const h = document.getElementById('today-heading');
+  const d = new Date();
+  h.textContent = d.toLocaleDateString([], { weekday: 'long' });
+  if (todayItems.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">○</div><p>Nothing captured today.<br>Drop a thought to start.</p></div>`;
+    return;
+  }
+  el.innerHTML = todayItems.map((item, i) => renderItem(item, `openDetail(${i}, 'today')`)).join('');
+}
+
+function selTlFilter(el) {
+  document.querySelectorAll('.tl-filter').forEach(f => f.classList.remove('sel'));
+  el.classList.add('sel');
+  tlFilter = el.dataset.range;
+  renderTimeline();
+}
+
+function renderTimeline() {
+  let filtered = items;
+  if (tlFilter === 'today') filtered = items.filter(i => isToday(i.ts));
+  else if (tlFilter === 'yesterday') filtered = items.filter(i => isYesterday(i.ts));
+  else if (tlFilter === 'week') filtered = items.filter(i => isThisWeek(i.ts));
+
+  if (filtered.length === 0) {
+    document.getElementById('timeline-content').innerHTML = `<div class="empty-state"><div class="es-icon">◫</div><p>Nothing here yet.</p></div>`;
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(item => {
+    const key = isToday(item.ts) ? 'Today' : isYesterday(item.ts) ? 'Yesterday' : new Date(item.ts).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  let html = '';
+  Object.keys(groups).forEach(gk => {
+    html += `<div class="tl-label">${gk}</div><div class="items-list">`;
+    groups[gk].forEach((item, i) => {
+      const globalIdx = items.indexOf(item);
+      html += renderItem(item, `openDetailById(${item.id})`);
+    });
+    html += `</div>`;
+  });
+
+  document.getElementById('timeline-content').innerHTML = html;
+}
+
+function renderReview() {
+  const weekItems = items.filter(i => isThisWeek(i.ts));
+  const tasks = weekItems.filter(i => i.type === 'task');
+  const ideas = weekItems.filter(i => i.type === 'idea');
+  const notes = weekItems.filter(i => i.type === 'note');
+
+  const cats = {};
+  weekItems.forEach(i => { cats[i.cat] = (cats[i.cat] || 0) + 1; });
+  const topCat = Object.keys(cats).sort((a,b) => cats[b]-cats[a])[0] || 'work';
+
+  const el = document.getElementById('review-content');
+
+  const weekStr = (() => {
+    const n = new Date();
+    const start = new Date(n); start.setDate(n.getDate() - n.getDay());
+    return start.toLocaleDateString([], { month: 'long', day: 'numeric' }) + ' – ' + n.toLocaleDateString([], { month: 'long', day: 'numeric' });
+  })();
+
+  el.innerHTML = `
+    <p style="font-size:13px;color:var(--text3);padding:0 0 16px;font-weight:300;">${weekStr}</p>
+    <div class="review-stat-row">
+      <div class="review-stat"><div class="num">${weekItems.length}</div><div class="lbl">Captured</div></div>
+      <div class="review-stat"><div class="num">${tasks.length}</div><div class="lbl">Tasks</div></div>
+      <div class="review-stat"><div class="num">${ideas.length}</div><div class="lbl">Ideas</div></div>
+    </div>
+    ${tasks.length ? `<div class="review-block"><h3>Tasks</h3>${tasks.slice(0,5).map(i=>`<div class="review-item">${escHtml(i.text)}</div>`).join('')}</div>` : ''}
+    ${ideas.length ? `<div class="review-block"><h3>Ideas</h3>${ideas.slice(0,5).map(i=>`<div class="review-item">${escHtml(i.text)}</div>`).join('')}</div>` : ''}
+    ${notes.length ? `<div class="review-block"><h3>Notes &amp; Reflections</h3>${notes.slice(0,5).map(i=>`<div class="review-item">${escHtml(i.text)}</div>`).join('')}</div>` : ''}
+    ${weekItems.length === 0 ? `<div class="empty-state"><div class="es-icon">✦</div><p>Capture thoughts this week<br>and they'll appear here.</p></div>` : ''}
+    <div class="review-block" style="margin-top:4px;">
+      <h3>Focus area</h3>
+      <div class="review-item" style="color:var(--text);">Most active category: <strong>${topCat}</strong></div>
+      <div class="review-item">Keep capturing — your second brain is growing.</div>
+    </div>
+  `;
+}
+
+function doSearch(q) {
+  const el = document.getElementById('search-results');
+  if (!q.trim()) { el.innerHTML = ''; return; }
+  const lq = q.toLowerCase();
+  const res = items.filter(i =>
+    i.text.toLowerCase().includes(lq) ||
+    i.type.includes(lq) ||
+    i.cat.includes(lq)
+  );
+  if (res.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">○</div><p>No results for "${escHtml(q)}"</p></div>`;
+    return;
+  }
+  el.innerHTML = res.map(item => renderItem(item, `openDetailById(${item.id})`)).join('');
+}
+
+function openDetailById(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('detail-meta').innerHTML = chipHtml(item.type) + catHtml(item.cat);
+  document.getElementById('detail-title').textContent = '';
+  document.getElementById('detail-body').textContent = item.text;
+  document.getElementById('detail-time').textContent = fmtDateFull(item.ts);
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function openDetail(idx, scope) {
+  let arr = scope === 'today' ? items.filter(i => isToday(i.ts)) : items;
+  openDetailById(arr[idx].id);
+}
+
+function closeDetail(e) {
+  if (e.target === document.getElementById('detail-overlay')) {
+    document.getElementById('detail-overlay').classList.remove('open');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function init() {
+  const d = new Date();
+  const el = document.getElementById('today-date');
+  if (el) el.textContent = d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+  updateHomeCount();
+}
+
+init();
+</script>
+</body>
+</html>
